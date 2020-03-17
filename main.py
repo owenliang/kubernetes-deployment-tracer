@@ -19,7 +19,8 @@ def my_callback(deployment, track, notify):
     elif notify == DEPLOYMENT_NOTIFY_RUNNING_RECOVER: # 运行恢复
         ext_info = '持续时间: {}'.format(track['recover_time'] - track['error_time'])
 
-    print(basic_info + ext_info)
+    if notify:
+        print(basic_info + ext_info)
 
 if __name__ == '__main__':
     tracer(my_callback)

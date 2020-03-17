@@ -4,7 +4,7 @@
 
 # 效果
 
-![效果](https://github.com/owenliang/kubernetes-deployment-tracer/blob/master/show.jpg?raw=true)
+![效果](https://github.com/owenliang/kubernetes-deployment-tracer/blob/master/show.png?raw=true)
 
 # 使用方法
 

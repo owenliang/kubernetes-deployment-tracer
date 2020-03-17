@@ -1,7 +1,7 @@
 from kubernetes import watch, client
-from pprint import pprint
 from k8s_client import new_client
 import time
+import settings
 
 # deployment状态
 DEPLOYMENT_STATUS_PUBLISH_DOING = '发布中'  # 发布中
@@ -91,7 +91,7 @@ def proc_deployment_track_on_unhealthy(track, info, deployment):
     now = time.time()
     notify = ''
     if prev_status == DEPLOYMENT_STATUS_PUBLISH_DOING: # 发布中 -> 发布超时
-        if now - track['begin_time'] > 30:
+        if now - track['begin_time'] > settings.PUBLISH_TIMEOUT:
             track['status'] = DEPLOYMENT_STATUS_PUBLISH_TIMEOUT # 发布超时
             notify = DEPLOYMENT_NOTIFY_PUBLISH_TIMEOUT # 公告发布超时
     elif prev_status == DEPLOYMENT_STATUS_RUNNING_HEALTHY:  # 运行中 -> 运行异常
