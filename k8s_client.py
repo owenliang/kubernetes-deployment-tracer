@@ -12,7 +12,7 @@ def new_client():
             conf.api_key['authorization'] = fp.read()
     else:
         conf.host = settings.API_SERVER_HOST
-        conf.verify_ssl = settings.API_VERIFY_SSL
+        conf.verify_ssl = False # settings.API_VERIFY_SSL
         conf.api_key['authorization'] = base64.b64decode(settings.BEARER_TOKEN).decode('utf-8')
 
     conf.api_key_prefix['authorization'] = 'Bearer'
