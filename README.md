@@ -4,6 +4,8 @@
 
 # 效果
 
+![效果](https://github.com/owenliang/kubernetes-deployment-tracer/blob/master/show.jpg?raw=true)
+
 # 使用方法
 
 实现你的callback，注册到tracer函数：
