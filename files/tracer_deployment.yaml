@@ -19,3 +19,4 @@ spec:
       containers:
       - name: kubernetes-deployment-tracer
         image: owenliang1990/kubernetes-deployment-tracer:latest
+        command: ["/bin/bash", "-c", "python -u main.py"]
