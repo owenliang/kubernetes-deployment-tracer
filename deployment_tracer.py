@@ -22,7 +22,10 @@ deployment_track = {}
 
 # 判断deployment是否正常运行
 def is_deployment_healthy(deployment):
-    if  deployment['status']['observed_generation'] == deployment['metadata']['generation'] and \
+    # 新提交的YAML，generation字段是空的，这时候需要认定为不健康
+    if  deployment['status']['observed_generation'] and \
+            deployment['metadata']['generation'] and \
+            deployment['status']['observed_generation'] == deployment['metadata']['generation'] and \
             deployment['status']['updated_replicas'] == deployment['spec']['replicas'] and \
             deployment['status']['replicas'] == deployment['spec']['replicas'] and \
             deployment['status']['available_replicas'] == deployment['spec']['replicas']:
@@ -49,11 +52,9 @@ def insert_deployment_track(info, deployment):
     if info['healthy']:
         track['status'] = DEPLOYMENT_STATUS_RUNNING_HEALTHY
     else:
-        if info['fullname'] in deployment_track: # 上一次发布记录存在，则标记本次为发布中
-            notify = DEPLOYMENT_NOTIFY_PUBLISH_DOING
-            track['status'] = DEPLOYMENT_STATUS_PUBLISH_DOING
-        else:
-            track['status'] = DEPLOYMENT_STATUS_RUNNING_ERROR # 否则标记本次是异常状态
+        # 新插入的不健康都认为是发布中
+        notify = DEPLOYMENT_NOTIFY_PUBLISH_DOING
+        track['status'] = DEPLOYMENT_STATUS_PUBLISH_DOING
 
     # 对本轮发布是否成功过做一个猜测
     if track['status'] == DEPLOYMENT_STATUS_RUNNING_HEALTHY:
@@ -101,7 +102,12 @@ def proc_deployment_track_on_unhealthy(track, info, deployment):
 
     return notify
 
-def handle_deplyment_track(cb, deployment):
+def handle_deplyment_track(cb, event_obj):
+    # 操作类型
+    op_type = event_obj['type']
+    # 部署对象
+    deployment = event_obj['object'].to_dict()
+
     deployment_fullname = get_deployment_fullname(deployment)
     deployment_healthy = is_deployment_healthy(deployment)
     deployment_generation = get_deployment_expected_generation(deployment)
@@ -110,6 +116,12 @@ def handle_deplyment_track(cb, deployment):
         'healthy': deployment_healthy,   # 是否部署完成
         'generation': deployment_generation, # 期望版本
     }
+
+    # 删除处理
+    if op_type == 'DELETED':
+        if deployment_fullname in deployment_track:
+            del deployment_track[deployment_fullname]
+        return
 
     notify = ''
     if deployment_fullname not in deployment_track:  # 不存在则记录
@@ -131,5 +143,5 @@ def tracer(cb):
     apps_v1 = client.AppsV1Api(api_client)
 
     w = watch.Watch()
-    for deployment in w.stream(apps_v1.list_deployment_for_all_namespaces):
-        handle_deplyment_track(cb, deployment['object'].to_dict())
+    for event_obj in w.stream(apps_v1.list_deployment_for_all_namespaces):
+        handle_deplyment_track(cb, event_obj)
